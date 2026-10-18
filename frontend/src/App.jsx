@@ -53,6 +53,8 @@ function MetricCard({ icon: Icon, label, value, note, tone = 'violet', detail })
   )
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+
 function App() {
   const [active, setActive] = useState('Overview')
   const [query, setQuery] = useState('')
@@ -80,7 +82,7 @@ function App() {
     let alive = true
     async function checkApi() {
       try {
-        const response = await fetch('http://127.0.0.1:8000/health')
+        const response = await fetch(API_BASE_URL + '/health')
         if (!response.ok) throw new Error('API unavailable')
         const data = await response.json()
         if (alive) {
@@ -103,7 +105,7 @@ function App() {
     async function loadVulnerabilities() {
       try {
         const response = await fetch(
-          'http://127.0.0.1:8000/vulnerabilities'
+          API_BASE_URL + '/vulnerabilities'
         )
 
         if (!response.ok) {
@@ -147,7 +149,7 @@ useEffect(() => {
 
     try {
       const response = await fetch(
-        'http://127.0.0.1:8000/blast-radius/CVE-DEMO-001'
+        API_BASE_URL + '/blast-radius/CVE-DEMO-001'
       )
 
       if (!response.ok) {
@@ -183,7 +185,7 @@ useEffect(() => {
   async function runSimulation() {
     setSimulationLoading(true); setSimulationError('')
     try {
-      const response = await fetch('http://127.0.0.1:8000/simulate-remediation', {
+      const response = await fetch(API_BASE_URL + '/simulate-remediation', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ severity: blastRadius?.severity || 'CRITICAL', service_criticality: 'HIGH', affected_services: Math.max(blastRadius?.services?.length || 1, 1) }),
       })
@@ -197,7 +199,7 @@ useEffect(() => {
   async function loadApprovals() {
     setApprovalLoading(true); setApprovalError('')
     try {
-      const response = await fetch('http://127.0.0.1:8000/approvals')
+      const response = await fetch(API_BASE_URL + '/approvals')
       const data = await response.json()
       if (!response.ok) throw new Error(data.detail || `API returned ${response.status}`)
       setApprovals(data.approvals || [])
@@ -208,7 +210,7 @@ useEffect(() => {
   async function createApproval(action, vulnerabilityId = 'CVE-DEMO-001') {
     setNotice(''); setApprovalError('')
     try {
-      const response = await fetch('http://127.0.0.1:8000/approvals', {
+      const response = await fetch(API_BASE_URL + '/approvals', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action, vulnerability_id: vulnerabilityId, requested_by: requestedBy }),
       })
@@ -222,7 +224,7 @@ useEffect(() => {
   async function decideApproval(approvalId, decision) {
     setApprovalError('')
     try {
-      const response = await fetch(`http://127.0.0.1:8000/approvals/${approvalId}/decision`, {
+      const response = await fetch(`${API_BASE_URL}/approvals/${approvalId}/decision`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ decision, decided_by: decisionBy, reason: 'Reviewed in CHAINBREAK dashboard' }),
       })
@@ -469,7 +471,7 @@ useEffect(() => {
           ) : active === 'Settings' ? (
             <section className="panel workspace-panel">
               <div className="panel-heading"><div><h3>Workspace settings</h3><p>Connection and safety configuration</p></div></div>
-              <div className="settings-list"><div><span>API endpoint</span><code>http://127.0.0.1:8000</code><b className={apiStatus === 'Connected' ? 'text-success' : 'text-muted'}>{apiStatus}</b></div><div><span>Graph database</span><strong>FalkorDB</strong><b>Configured in backend environment</b></div><div><span>Approval gate</span><strong>Required for every recommendation</strong><b>No remediation executes from this UI</b></div><div><span>Data labeling</span><strong>Advisories + synthetic demo topology</strong><b>Production impact must be verified</b></div></div>
+              <div className="settings-list"><div><span>API endpoint</span><code>{API_BASE_URL}</code><b className={apiStatus === 'Connected' ? 'text-success' : 'text-muted'}>{apiStatus}</b></div><div><span>Graph database</span><strong>FalkorDB</strong><b>Configured in backend environment</b></div><div><span>Approval gate</span><strong>Required for every recommendation</strong><b>No remediation executes from this UI</b></div><div><span>Data labeling</span><strong>Advisories + synthetic demo topology</strong><b>Production impact must be verified</b></div></div>
               <button className="secondary-button" onClick={() => window.location.reload()}><RefreshCw size={15}/> Reload dashboard</button>
             </section>
           ) : (
@@ -661,3 +663,5 @@ useEffect(() => {
 }
 
 export default App
+
+
