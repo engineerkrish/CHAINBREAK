@@ -1,397 +1,160 @@
-﻿# CHAINBREAK
+Project: CHAINBREAK
+Track: Agents That Act on Connected Data
+Graph Database: FalkorDB
+Repository: https://github.com/engineerkrish/CHAINBREAK
+AI Assistance Disclosure
+AI coding assistants were used to support development, debugging, and documentation. The submitted implementation should be reviewed and understood by the project contributor.
+Built for the FalkorDB graph hackathon.
 
-
+# CHAINBREAK
 
 ### Graph-Powered Software Supply-Chain Vulnerability Investigation
 
+CHAINBREAK uses **FalkorDB** to trace vulnerability relationships across packages, repositories, and services. It combines graph-based impact analysis, remediation simulations, and human approval controls in one interactive dashboard.
 
+> **Track:** Agents That Act on Connected Data
 
-CHAINBREAK uses FalkorDB to trace vulnerability relationships across packages, repositories, and services. It combines graph-derived impact evidence, remediation simulations, and human approval controls.
+## The Problem
 
+A vulnerability in a software dependency can affect multiple repositories and services. A vulnerability list alone cannot reveal the complete downstream impact.
 
+CHAINBREAK uses graph relationships to identify represented dependencies and help developers understand potential impact before choosing a remediation strategy.
 
-## Problem
+## Key Features
 
-
-
-A vulnerability in a software dependency may affect multiple repositories and services. A vulnerability list alone does not reveal the complete downstream impact.
-
-
-
-CHAINBREAK queries a connected graph to identify represented dependencies and support remediation planning.
-
-
-
-## Features
-
-
-
-\- \*\*Vulnerability inventory:\*\* Retrieve vulnerability records from FalkorDB.
-
-\- \*\*Blast-radius analysis:\*\* Trace vulnerability-to-package-to-repository-to-service relationships.
-
-\- \*\*Graph investigation:\*\* Combine graph-derived evidence with remediation simulation inputs.
-
-\- \*\*Remediation comparison:\*\* Compare hypothetical remediation strategies.
-
-\- \*\*Human approval workflow:\*\* Submit, approve, or reject remediation requests.
-
-\- \*\*Safety controls:\*\* Remediation is simulated only. No production changes are executed.
-
-\- \*\*Interactive dashboard:\*\* Explore vulnerabilities, attack paths, infrastructure, simulations, and approvals.
-
-
+- **Vulnerability Inventory:** Retrieve vulnerability records from FalkorDB.
+- **Blast-Radius Analysis:** Trace connections from vulnerabilities to packages, repositories, and services.
+- **Graph Investigation:** Query connected dependency data to identify represented impact paths.
+- **Remediation Simulation:** Compare hypothetical remediation strategies using illustrative risk-reduction estimates.
+- **Human Approval:** Submit, approve, or reject remediation requests.
+- **Safety Controls:** Remediation is simulated only. No production changes are executed.
+- **Interactive Dashboard:** Explore vulnerabilities, attack paths, infrastructure, simulations, approvals, and configuration.
 
 ## Architecture
 
-
-
 ```text
-
 React + Vite Dashboard
-
-&#x20;       |
-
-&#x20;       | HTTP / JSON
-
-&#x20;       v
-
+        |
+        | HTTP / JSON
+        v
 FastAPI Backend
-
-&#x20;       |
-
-&#x20;       +---- Vulnerability inventory
-
-&#x20;       |
-
-&#x20;       +---- Graph investigation
-
-&#x20;       |          |
-
-&#x20;       |          v
-
-&#x20;       |       FalkorDB
-
-&#x20;       |          |
-
-&#x20;       |          v
-
-&#x20;       |    Connected dependency evidence
-
-&#x20;       |
-
-&#x20;       +---- Deterministic remediation simulator
-
-&#x20;       |
-
-&#x20;       +---- Human approval workflow
-
-```
-
-
-
-## Graph Data Model
-
-
-
-CHAINBREAK uses the following node labels:
-
-
-
-\- `Vulnerability`
-
-\- `Package`
-
-\- `Repository`
-
-\- `Service`
-
-
-
-The demonstrated relationship path is:
-
-
-
-```text
-
-(Vulnerability)-\[:AFFECTS]->(Package)
-
-(Package)-\[:USED\_BY]->(Repository)
-
-(Repository)-\[:DEPLOYED\_IN]->(Service)
-
-```
-
-
-
-Example synthetic demonstration path:
-
-
-
-```text
-
-CVE-DEMO-001
-
-&#x20;   -> log-parser
-
-&#x20;   -> acme/payment-service
-
-&#x20;   -> payment-api
-
-```
-
-
-
-\*\*Data disclaimer:\*\* This example infrastructure path is synthetic demonstration data, not a claim about a real company's infrastructure. Imported vulnerability records may not have mapped infrastructure relationships.
-
-
-
-## Graph Query
-
-
-
-The blast-radius investigation uses Cypher to traverse connected nodes in FalkorDB:
-
-
-
-```cypher
-
-MATCH (v:Vulnerability {id: $vulnerability\_id})
-
-OPTIONAL MATCH (v)-\[:AFFECTS]->(p:Package)
-
-OPTIONAL MATCH (p)-\[:USED\_BY]->(r:Repository)
-
-OPTIONAL MATCH (r)-\[:DEPLOYED\_IN]->(s:Service)
-
-RETURN v.id AS vulnerability,
-
-&#x20;      v.severity AS severity,
-
-&#x20;      v.title AS title,
-
-&#x20;      collect(DISTINCT p.name) AS packages,
-
-&#x20;      collect(DISTINCT r.name) AS repositories,
-
-&#x20;      collect(DISTINCT s.name) AS services
-
-```
-
-
-
-The vulnerability ID is passed as a query parameter. The graph queryâ€”not a frontend visualizationâ€”provides the connected impact evidence used by the investigation endpoint.
-
-
-
-## Remediation and Safety
-
-
-
-Remediation options are generated by a deterministic simulator using illustrative risk, effort, and availability-impact values. These values are not measured production outcomes.
-
-
-
-Approval requests can be created and approved or rejected. Approval does not execute a remediation action. Approval records are stored in application memory and may be lost when the backend restarts.
-
-
-
-No production systems are modified.
-
-
-
-## Technology Stack
-
-
-
-\- React
-
-\- Vite
-
-\- Tailwind CSS
-
-\- Python
-
-\- FastAPI
-
-\- FalkorDB
-
-\- Cypher
-
-\- Pydantic
-
-\- python-dotenv
-
-
-
-## Local Setup
-
-
-
-### Prerequisites
-
-
-
-\- Python 3.11 or newer
-
-\- Node.js and npm
-
-\- A reachable FalkorDB instance
-
-
-
-### 1. Configure environment variables
-
-
-
-Create a `.env` file in the project root using `.env.example` as a template.
-
-
-
-Set your FalkorDB host, port, username, password, graph name, and SSL setting. Never commit `.env` or expose credentials in screenshots or videos.
-
-
-
-### 2. Start the backend
-
-
-
-From the project root:
-
-
-
-```powershell
-
-python -m venv .venv
-
-.\\.venv\\Scripts\\Activate.ps1
-
-python -m pip install fastapi uvicorn FalkorDB python-dotenv
-
-python -m uvicorn app.main:app --reload
-
-```
-
-
-
-Backend API: `http://127.0.0.1:8000`
-
-
-
-Interactive API documentation: `http://127.0.0.1:8000/docs`
-
-
-
-Health check: `http://127.0.0.1:8000/health`
-
-
-
-### 3. Start the frontend
-
-
-
-Open another PowerShell window:
-
-
-
-```powershell
-
+        |
+        +---- Vulnerability Inventory
+        |
+        +---- Graph Investigation
+        |          |
+        |          v
+        |       FalkorDB
+        |          |
+        |          v
+        |    Connected Dependency Evidence
+        |
+        +---- Remediation Simulator
+        |
+        +---- Human Approval Workflow
+Technology Stack
+Component	Technology
+Frontend	React, Vite, Tailwind CSS
+Backend	Python, FastAPI
+Graph Database	FalkorDB
+Graph Query Language	Cypher
+Configuration	Environment variables, python-dotenv
+
+
+Graph Data Model
+CHAINBREAK represents software supply-chain relationships using nodes and directed edges.
+Nodes
+- Vulnerability — vulnerability identifier, severity, and title.
+- Package — affected software package and version.
+- Repository — repository using the package.
+- Service — service associated with the repository.
+Relationships
+(Vulnerability)-[:AFFECTS]->(Package)
+(Package)-[:USED_BY]->(Repository)
+(Repository)-[:DEPLOYED_IN]->(Service)
+
+These relationships allow CHAINBREAK to traverse the graph and identify downstream entities connected to a vulnerability.
+Demo data notice: The infrastructure path uses synthetic demonstration data. It does not establish that a real company or production service is affected.
+Example Cypher Query
+The following query retrieves a vulnerability and its connected packages, repositories, and services.
+MATCH (v:Vulnerability {id: $vulnerability_id})
+OPTIONAL MATCH (v)-[:AFFECTS]->(p:Package)
+OPTIONAL MATCH (p)-[:USED_BY]->(r:Repository)
+OPTIONAL MATCH (r)-[:DEPLOYED_IN]->(s:Service)
+RETURN
+    v.id AS vulnerability,
+    v.severity AS severity,
+    v.title AS title,
+    collect(DISTINCT p.name) AS packages,
+    collect(DISTINCT r.name) AS repositories,
+    collect(DISTINCT s.name) AS services
+
+The vulnerability identifier is passed as a query parameter.
+FalkorDB is central to vulnerability retrieval and connected-impact analysis. The remediation simulator and approval workflow are separate application components.
+Safety and Limitations
+- Remediation recommendations are hypothetical.
+- Risk-reduction figures are illustrative estimates, not measured security outcomes.
+- Approval requests do not execute real remediation actions.
+- Approval state is stored in application memory and may be lost when the backend restarts.
+- Synthetic infrastructure relationships must not be interpreted as verified real-world exposure.
+- CHAINBREAK is a demonstration and decision-support tool, not a replacement for security verification.
+Setup
+Prerequisites
+- Python 3.11 or later
+- Node.js and npm
+- A reachable FalkorDB instance
+1. Clone the repository
+git clone https://github.com/engineerkrish/CHAINBREAK.git
+cd CHAINBREAK
+
+2. Configure the backend
+Create a local .env file using .env.example as a template.
+Configure the following values for your FalkorDB instance:
+FALKORDB_HOST=your-falkordb-host
+FALKORDB_PORT=your-port
+FALKORDB_USERNAME=falkordb
+FALKORDB_PASSWORD=your-password
+FALKORDB_GRAPH=chainbreak
+FALKORDB_SSL=false
+
+Use the SSL setting appropriate for your database provider.
+Never commit your .env file or database credentials.
+3. Install Python dependencies
+Create and activate a virtual environment, then run:
+python -m pip install -r requirements.txt
+
+4. Start the backend
+uvicorn app.main:app --reload
+
+The API is available at:
+- API: http://127.0.0.1:8000
+- Interactive API documentation: http://127.0.0.1:8000/docs
+5. Start the frontend
+Open another terminal:
 cd frontend
-
 npm install
-
 npm run dev
 
-```
+Open the local URL printed by Vite.
+6. Verify the connection
+Check the API health endpoint:
+http://127.0.0.1:8000/health
 
-
-
-Open the local URL printed by Vite, usually `http://localhost:5173` or `http://localhost:5174`.
-
-
-
-### 4. Build the frontend
-
-
-
-```powershell
-
-cd frontend
-
-npm run build
-
-```
-
-
-
-## API Endpoints
-
-
-
-| Method | Endpoint | Purpose |
-
-|---|---|---|
-
-| GET | `/health` | Check backend and graph connectivity |
-
-| GET | `/vulnerabilities` | List graph vulnerability records |
-
-| GET | `/blast-radius/{vulnerability\_id}` | Query downstream impact |
-
-| GET | `/investigate/{vulnerability\_id}` | Combine graph evidence and remediation simulation |
-
-| POST | `/simulate-remediation` | Compare hypothetical remediation options |
-
-| GET | `/approvals` | List approval requests |
-
-| POST | `/approvals` | Create an approval request |
-
-| POST | `/approvals/{approval\_id}/decision` | Approve or reject a request |
-
-| GET | `/approvals/{approval\_id}` | Retrieve an approval request |
-
-
-
-## Limitations
-
-
-
-\- Investigation results depend on the relationships represented in FalkorDB.
-
-\- Missing graph relationships may lead to incomplete impact analysis.
-
-\- Remediation risk scores are illustrative, not validated risk measurements.
-
-\- Approval storage is in memory, not a persistent audit database.
-
-\- Remediation execution and production integrations are not implemented.
-
-
-
-## Hackathon Track
-
-
-
-\*\*Agents That Act on Connected Data\*\*
-
-
-
-CHAINBREAK demonstrates graph-backed vulnerability investigation and a human-controlled remediation-planning workflow. Its current implementation uses a deterministic simulator; it does not claim to contain an LLM-powered autonomous agent.
-
-
-
-## AI-Assistance Disclosure
-
-
-
-AI coding assistance was used during development for implementation guidance, debugging, documentation, and workflow refinement. The submitted code and architecture should be reviewed and understood by the project author.
-
-
-
-## License
-
-
-
-Add a license before reuse or redistribution if required by your intended distribution terms.
-
-
+Ensure FalkorDB is reachable and the required graph data has been loaded.
+Project Structure
+CHAINBREAK/
+├── app/
+│   ├── approvals.py
+│   ├── database.py
+│   ├── main.py
+│   └── simulator.py
+├── frontend/
+│   ├── src/
+│   ├── package.json
+│   └── vite.config.js
+├── .env.example
+├── .gitignore
+├── import_osv.py
+├── import_to_graph.py
+├── requirements.txt
+└── README.md
